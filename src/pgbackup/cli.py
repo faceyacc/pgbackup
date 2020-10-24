@@ -32,3 +32,22 @@ def create_parser():
                         action=DriverAction,  # Moving the action taking by this to the class 'DriverAction'
                         required=True)
     return parser
+
+
+def main():
+    import boto3
+    from pgbackup import pgdump, storage
+
+    # Parses the arguments given by user.
+    args = create_parser().parse_args()
+
+    # Runs a 'pgdump' command on the url to get data from database
+    dump = pgdump.dump(args.url)
+
+    # Handels condiitons, whether to store locally or remotly(s3 bucket)
+    if args.driver == 's3':
+        client = boto3.client('s3')
+        storage.s3(client, dump.stdout, args.destination, 'example.sql')
+    else:
+        outfile = open(args.destination, 'wb')
+        storage.local(dump.stdout, outfile)

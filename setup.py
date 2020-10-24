@@ -16,5 +16,13 @@ setup(
     long_description=long_description,
     url='https://github.com/faceyacc/pgbackup',
     # This is where find the sub-packages that is in the 'src' directory
-    packages=find_packages('src')
+    packages=find_packages('src'),
+    package_dir={'': 'src'},
+    install_requires=['boto3'],
+    entry_points={
+        'console_scripts': [
+            'pgbackup=pgbackup.cli:main',
+        ],
+    }
+
 )
