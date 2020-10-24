@@ -26,7 +26,7 @@ def create_parser():
     Back up PostgreSQL databases locally or to AWS s3.
     """)
     parser.add_argument('url', help="URL of database to backup")
-    parser.add_argument("--driver",
+    parser.add_argument("--driver", "-d",
                         help="how & where to store backup",
                         nargs=2,  # Driver name, and a whether an bucket or local path would be used to back up database
                         action=DriverAction,  # Moving the action taking by this to the class 'DriverAction'
@@ -35,6 +35,7 @@ def create_parser():
 
 
 def main():
+    import time
     import boto3
     from pgbackup import pgdump, storage
 
@@ -47,7 +48,15 @@ def main():
     # Handels condiitons, whether to store locally or remotly(s3 bucket)
     if args.driver == 's3':
         client = boto3.client('s3')
-        storage.s3(client, dump.stdout, args.destination, 'example.sql')
+        timestamp = time.strftime("%Y-%m-%dT%H:%M", time.localtime())
+        filename = pgdump.dump_file_name(args.url, timestamp)
+        print(f"Backing database up to {args.destination} in S3 as {filename}")
+
+        storage.s3(client,
+                   dump.stdout,
+                   args.destination,
+                   filename)
     else:
         outfile = open(args.destination, 'wb')
+        print(f"Backing database up locally to {outfile.name}")
         storage.local(dump.stdout, outfile)
